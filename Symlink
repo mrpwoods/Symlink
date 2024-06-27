@@ -1,0 +1,41 @@
+#!/bin/bash
+SELINUX=ermissive
+
+# List all executable files in the current directory
+echo "Executable files in the current directory:"
+executables=()
+counter=1
+
+for file in *; do
+    if [[ -x "$file" && ! -d "$file" ]]; then
+        executables+=("$file")
+        echo "$counter. $file"
+        ((counter++))
+    fi
+done
+
+# Check if no executables were found
+if [ ${#executables[@]} -eq 0 ]; then
+    echo "No executable files found in the current directory."
+    exit 1
+fi
+
+# Prompt the user to select a file
+read -p "Select a file by number: " selection
+
+# Validate the user's selection
+if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt ${#executables[@]} ]; then
+    echo "Invalid selection."
+    exit 1
+fi
+
+# Get the selected file
+selected_file=${executables[$((selection - 1))]}
+
+# Prompt the user for the command name
+read -p "Enter the command name for the symlink: " command_name
+
+# Create the symbolic link
+sudo ln -s "$(pwd)/$selected_file" "/usr/local/bin/$command_name"
+
+echo "Symlink created: /usr/local/bin/$command_name -> $(pwd)/$selected_file"
